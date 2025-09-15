@@ -5,7 +5,7 @@ use serde::de::Error as DeserializeError;
 use vmm::logger::{IncMetric, METRICS};
 use vmm::rpc_interface::VmmAction;
 use vmm::vmm_config::snapshot::{
-    CreateSnapshotParams, LoadSnapshotConfig, LoadSnapshotParams, MemBackendConfig, MemBackendType,
+    CreateSnapshotParams, DriveOverride, LoadSnapshotConfig, LoadSnapshotParams, MemBackendConfig, MemBackendType,
     Vm, VmState,
 };
 
@@ -110,6 +110,7 @@ fn parse_put_snapshot_load(body: &Body) -> Result<ParsedRequest, RequestError> {
             || snapshot_config.track_dirty_pages,
         resume_vm: snapshot_config.resume_vm,
         network_overrides: snapshot_config.network_overrides,
+        drive_overrides: snapshot_config.drive_overrides,
     };
 
     // Construct the `ParsedRequest` object.
@@ -125,7 +126,7 @@ fn parse_put_snapshot_load(body: &Body) -> Result<ParsedRequest, RequestError> {
 
 #[cfg(test)]
 mod tests {
-    use vmm::vmm_config::snapshot::{MemBackendConfig, MemBackendType, NetworkOverride};
+    use vmm::vmm_config::snapshot::{DriveOverride, MemBackendConfig, MemBackendType, NetworkOverride};
 
     use super::*;
     use crate::api_server::parsed_request::tests::{depr_action_from_req, vmm_action_from_request};
@@ -187,6 +188,7 @@ mod tests {
             track_dirty_pages: false,
             resume_vm: false,
             network_overrides: vec![],
+            drive_overrides: vec![],
         };
         let mut parsed_request = parse_put_snapshot(&Body::new(body), Some("load")).unwrap();
         assert!(
@@ -217,6 +219,7 @@ mod tests {
             track_dirty_pages: true,
             resume_vm: false,
             network_overrides: vec![],
+            drive_overrides: vec![],
         };
         let mut parsed_request = parse_put_snapshot(&Body::new(body), Some("load")).unwrap();
         assert!(
@@ -247,6 +250,7 @@ mod tests {
             track_dirty_pages: false,
             resume_vm: true,
             network_overrides: vec![],
+            drive_overrides: vec![],
         };
         let mut parsed_request = parse_put_snapshot(&Body::new(body), Some("load")).unwrap();
         assert!(
@@ -286,6 +290,7 @@ mod tests {
                 iface_id: String::from("eth0"),
                 host_dev_name: String::from("vmtap2"),
             }],
+            drive_overrides: vec![],
         };
         let mut parsed_request = parse_put_snapshot(&Body::new(body), Some("load")).unwrap();
         assert!(
@@ -313,6 +318,7 @@ mod tests {
             track_dirty_pages: false,
             resume_vm: true,
             network_overrides: vec![],
+            drive_overrides: vec![],
         };
         let parsed_request = parse_put_snapshot(&Body::new(body), Some("load")).unwrap();
         assert_eq!(

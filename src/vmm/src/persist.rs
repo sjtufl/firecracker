@@ -339,6 +339,36 @@ pub fn restore_from_snapshot(
             .map(|device_state| device_state.tap_if_name.clone_from(&entry.host_dev_name))
             .ok_or(SnapshotStateFromFileError::UnknownNetworkDevice)?;
     }
+
+    for entry in &params.drive_overrides {
+        microvm_state
+            .device_states
+            .mmio_state
+            .block_devices
+            .iter_mut()
+            .map(|device| &mut device.device_state)
+            .chain(
+                microvm_state
+                    .device_states
+                    .pci_state
+                    .block_devices
+                    .iter_mut()
+                    .map(|device| &mut device.device_state),
+            )
+            .find(|x| match x {
+                crate::devices::virtio::block::persist::BlockState::Virtio(state) => state.id == entry.drive_id,
+                crate::devices::virtio::block::persist::BlockState::VhostUser(state) => state.id == entry.drive_id,
+            })
+            .map(|device_state| match device_state {
+                crate::devices::virtio::block::persist::BlockState::Virtio(state) => {
+                    state.disk_path.clone_from(&entry.path_on_host);
+                }
+                crate::devices::virtio::block::persist::BlockState::VhostUser(state) => {
+                    state.socket_path.clone_from(&entry.path_on_host);
+                }
+            })
+            .ok_or(SnapshotStateFromFileError::UnknownBlockDevice)?;
+    }
     let track_dirty_pages = params.track_dirty_pages;
 
     let vcpu_count = microvm_state
@@ -412,6 +442,8 @@ pub enum SnapshotStateFromFileError {
     Load(#[from] crate::snapshot::SnapshotError),
     /// Unknown Network Device.
     UnknownNetworkDevice,
+    /// Unknown Block Device.
+    UnknownBlockDevice,
 }
 
 fn snapshot_state_from_file(

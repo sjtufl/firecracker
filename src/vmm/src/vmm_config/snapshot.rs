@@ -57,6 +57,14 @@ pub struct NetworkOverride {
     pub host_dev_name: String,
 }
 
+#[derive(Debug, PartialEq, Eq, Deserialize)]
+pub struct DriveOverride {
+    /// The ID of the drive to modify
+    pub drive_id: String,
+    /// The new path of the drive to be assigned
+    pub path_on_host: String,
+}
+
 /// Stores the configuration that will be used for loading a snapshot.
 #[derive(Debug, PartialEq, Eq)]
 pub struct LoadSnapshotParams {
@@ -72,6 +80,8 @@ pub struct LoadSnapshotParams {
     pub resume_vm: bool,
     /// The network devices to override on load.
     pub network_overrides: Vec<NetworkOverride>,
+    /// The drive devices to override on load.
+    pub drive_overrides: Vec<DriveOverride>,
 }
 
 /// Stores the configuration for loading a snapshot that is provided by the user.
@@ -101,6 +111,9 @@ pub struct LoadSnapshotConfig {
     /// The network devices to override on load.
     #[serde(default)]
     pub network_overrides: Vec<NetworkOverride>,
+    /// The drive devices to override on load.
+    #[serde(default)]
+    pub drive_overrides: Vec<DriveOverride>,
 }
 
 /// Stores the configuration used for managing snapshot memory.

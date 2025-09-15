@@ -1240,6 +1240,24 @@ definitions:
         description:
           The new host device of the interface
 
+  DriveOverride:
+    type: object
+    description:
+      Allows for changing the backing file path of a block device
+      during snapshot restore.
+    required:
+      - drive_id
+      - path_on_host
+    properties:
+      drive_id:
+        type: string
+        description:
+          The ID of the drive to modify
+      path_on_host:
+        type: string
+        description:
+          The new path on the host for the drive
+
   SnapshotLoadParams:
     type: object
     description:
@@ -1280,6 +1298,11 @@ definitions:
         description: Network host device names to override
         items:
           $ref: "#/definitions/NetworkOverride"
+      drive_overrides:
+        type: array
+        description: Block device paths to override
+        items:
+          $ref: "#/definitions/DriveOverride"
 
 
   TokenBucket:
